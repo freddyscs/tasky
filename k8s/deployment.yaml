@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tasky-deployment
+  labels:
+    app: tasky
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tasky
+  template:
+    metadata:
+      labels:
+        app: tasky
+    spec:
+      containers:
+      - name: tasky-container
+        image: 536697230138.dkr.ecr.us-east-1.amazonaws.com/freddyscs/tasky:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: PORT
+          value: "3000"
+        - name: MONGODB_URI
+          value: "mongodb://freddyscs:freddyscsPass@192.168.43.215:27017"
+        - name: SECRET_KEY
+          value: "secret123"
+      # If your ECR is private, uncomment and set the pull secret below
+      # imagePullSecrets:
+      # - name: ecr-pull-secret

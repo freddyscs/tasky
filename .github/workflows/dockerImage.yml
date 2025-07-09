@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Docker Image CI & Deploy to EKS
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,7 +24,7 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build, tag, and push image to ECR
+      - name: Build, tag, and push Docker image to ECR
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: freddyscs/tasky
@@ -33,3 +33,19 @@ jobs:
           docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
           docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Update kubeconfig for EKS
+        run: aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
+
+      - name: Set image tag in deployment YAML
+        run: |
+          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/freddyscs/tasky:${{ github.sha }}
+          sed "s|image:.*|image: $IMAGE_URI|" k8s/deployment.yaml > k8s/deployment-patched.yaml
+
+      - name: Apply Kubernetes manifests
+        run: |
+          kubectl apply -f k8s/deployment-patched.yaml
+          kubectl apply -f k8s/service.yaml
+
+      - name: Wait for deployment rollout
+        run: kubectl rollout status deployment/tasky-deployment
