@@ -23,17 +23,9 @@ spec:
         - name: PORT
           value: "3000"
         - name: MONGODB_URI
-          valueFrom:
-            secretKeyRef:
-              name: tasky-secrets
-              key: MONGODB_USER
-        - name: MONGODB_PASS
-          valueFrom:
-            secretKeyRef:
-              name: tasky-secrets
-              key: MONGODB_PASS
+          value: "mongodb://freddyscs:freddyscsPass@192.168.43.215:27017"
         - name: SECRET_KEY
-          valueFrom:
-            secretKeyRef:
-              name: tasky-secrets
-              key: SECRET_KEY
+          value: "secret123"
+      # If your ECR is private, uncomment and set the pull secret below
+      # imagePullSecrets:
+      # - name: ecr-pull-secret
