@@ -41,12 +41,12 @@ jobs:
       - name: Set image tag in deployment YAML
         run: |
           IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/freddyscs/tasky:${{ github.sha }}
-          sed "s|image:.*|image: $IMAGE_URI|" deployment.yaml > deployment-patched.yaml
+          sed "s|image:.*|image: $IMAGE_URI|" k8s/deployment.yaml > deployment-patched.yaml
 
       - name: Apply Kubernetes manifests
         run: |
-          kubectl apply -f deployment-patched.yaml
-          kubectl apply -f service.yaml
+          kubectl apply -f k8s/deployment-patched.yaml
+          kubectl apply -f k82/service.yaml
 
 
       - name: Wait for deployment rollout
